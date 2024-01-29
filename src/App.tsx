@@ -2,24 +2,34 @@ import { useEffect, useState } from 'react';
 import './App.css';
 
 function App() {
+  const RowLength = 20;
+  const ColLength = 30;
+
   // const [gridLength, setGridlength] = useState(20);
   const [mode, setMode] = useState<'normal' | 'medium' | 'hard'>('normal');
 
   const [snakePos, setSnakePos] = useState([
-    { row: 0, col: 0 },
+    { row: 0, col: 2 },
     { row: 0, col: 1 },
-    { row: 0, col: 2 }
+    { row: 0, col: 0 },
   ]);
 
   const [apple, setApplyPos] = useState({ row: 7, col: 9 });
 
   const [direction, setDirection] = useState('r');
-  
+
   const [snakeSpeed, setSnakeSpeed] = useState(150);
 
+  const [gameOver, setGameOver] = useState(false);
+  
   useEffect(() => {
     const interval = setInterval(() => {
+      if (gameOver) {
+        return;
+      }
+
       const headPos = { ...snakePos[0] };
+      
       switch (direction) {
         case 'l':
           headPos.col -= 1;
@@ -36,12 +46,24 @@ function App() {
         default:
           break;
       }
-      setSnakePos([headPos,...snakePos.slice(0, -1)]);
+      
+
+      if (
+        headPos.col >= ColLength ||
+        headPos.col < 0 ||
+        headPos.row >= RowLength ||
+        headPos.row < 0
+      ) {
+        setGameOver(true);
+        return;
+      }
+      
+      setSnakePos([headPos, ...snakePos.slice(0, -1)]);
     }, snakeSpeed);
     return () => {
       clearInterval(interval);
-    }
-  }, [snakePos, direction, snakeSpeed]);
+    };
+  }, [snakePos, direction, snakeSpeed, gameOver]);
 
   return (
     <div className="App block">
@@ -83,8 +105,8 @@ function App() {
         </div>
       </div>
 
-      <div className="game-area" >
-      {Array(20)
+      <div className="game-area">
+        {Array(20)
           .fill(0)
           .map((_, row) =>
             Array(30)
