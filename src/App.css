@@ -1,0 +1,41 @@
+.App {
+  text-align: center;
+  margin: 0 auto;
+}
+
+.game-area {
+  display: grid;
+  grid-template-columns: repeat(20, 1fr);
+  gap: 2px;
+  background-color: #222;
+  border: 1px solid #d6c7c7;
+  padding: 10px;
+  margin-bottom: 20px;
+  width: fit-content;
+  margin: 0 auto;
+}
+
+.cell {
+  width: 25px;
+  height: 25px;
+  background-color: #333;
+}
+
+.apple {
+  background-color: #ff5252;
+  border-radius: 50%;
+}
+
+.restart {
+  margin-bottom: 16px;
+}
+
+.snake {
+  background-color: #00c853;
+}
+
+.score {
+  font-size: 24px;
+  font-weight: bold;
+  color: #fff;
+}
