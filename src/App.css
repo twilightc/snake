@@ -5,7 +5,7 @@
 
 .game-area {
   display: grid;
-  grid-template-columns: repeat(20, 1fr);
+  grid-template-columns: repeat(30, 1fr);
   gap: 2px;
   background-color: #222;
   border: 1px solid #d6c7c7;
