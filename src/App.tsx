@@ -6,7 +6,9 @@ function App() {
   const ColLength = 30;
 
   // const [gridLength, setGridlength] = useState(20);
-  const [mode, setMode] = useState<'normal' | 'medium' | 'hard'>('normal');
+  const [mode, setMode] = useState<'normal' | 'medium' | 'hard'>('medium');
+
+  const [snakeSpeed, setSnakeSpeed] = useState(100);
 
   const [snakePos, setSnakePos] = useState([
     { row: 0, col: 2 },
@@ -14,13 +16,19 @@ function App() {
     { row: 0, col: 0 }
   ]);
 
-  const [apple, setApplyPos] = useState({ row: 7, col: 9 });
+  const [targetPos, setTargetPos] = useState({ row: 7, col: 9 });
 
   const [direction, setDirection] = useState('r');
 
-  const [snakeSpeed, setSnakeSpeed] = useState(150);
+  const [score, setScore] = useState(0);
 
   const [gameOver, setGameOver] = useState(false);
+
+  const setGameOverStatus = () => {
+    setGameOver(true);
+
+    setSnakePos([]);
+  };
 
   useEffect(() => {
     if (gameOver) {
@@ -86,24 +94,74 @@ function App() {
         default:
           break;
       }
-
+      
       if (
         headPos.col >= ColLength ||
         headPos.col < 0 ||
         headPos.row >= RowLength ||
-        headPos.row < 0
+        headPos.row < 0 ||
+        snakePos
+          .slice(1, snakePos.length)
+          .some(
+            (restPart, index) =>
+              index !== 0 && restPart.col === headPos.col && restPart.row === headPos.row
+          )
       ) {
-        setGameOver(true);
+        setGameOverStatus();
         return;
       }
 
-      setSnakePos([headPos, ...snakePos.slice(0, -1)]);
+      if (headPos.col === targetPos.col && headPos.row === targetPos.row) {
+        setScore((score) => score + 1);
+
+        setTargetPos({
+          row: Math.floor(Math.random() * RowLength),
+          col: Math.floor(Math.random() * ColLength)
+        });
+
+        setSnakePos([headPos, ...snakePos.slice()]);
+      } else {
+        setSnakePos([headPos, ...snakePos.slice(0, -1)]);
+      }
     }, snakeSpeed);
 
     return () => {
       clearInterval(interval);
     };
-  }, [snakePos, direction, snakeSpeed, gameOver]);
+  }, [snakePos, direction, snakeSpeed, gameOver, targetPos]);
+
+  useEffect(() => {
+    if (!gameOver) {
+      return;
+    }
+
+    const handleStartGame = (e: KeyboardEvent) => {
+      if ([' ', 'Enter'].includes(e.key)) {
+        setScore(0);
+        
+        setDirection('r');
+
+        setSnakePos([
+          { row: 0, col: 2 },
+          { row: 0, col: 1 },
+          { row: 0, col: 0 }
+        ]);
+
+        setTargetPos({
+          row: Math.floor(Math.random() * RowLength),
+          col: Math.floor(Math.random() * ColLength)
+        });
+
+        setGameOver(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleStartGame);
+
+    return () => {
+      document.removeEventListener('keydown', handleStartGame);
+    };
+  }, [gameOver]);
 
   return (
     <div className="App block">
@@ -141,7 +199,7 @@ function App() {
             type="radio"
             name="difficulty"
             checked={mode === 'medium'}
-            readOnly 
+            readOnly
             onKeyDown={(e) => {
               e.preventDefault();
             }}
@@ -172,7 +230,9 @@ function App() {
         </div>
       </div>
 
-      <div className="game-area">
+      <div className="my-[5px]">Your score: {score}</div>
+     
+      <div className="mt-[5px] game-area">
         {Array(20)
           .fill(0)
           .map((_, row) =>
@@ -183,7 +243,7 @@ function App() {
                   <div
                     className={`cell ${
                       snakePos.some((pos) => pos.col === col && pos.row === row) ? 'snake' : ''
-                    } ${apple.col === col && apple.row === row ? 'apple' : ''}
+                    } ${targetPos.col === col && targetPos.row === row ? 'apple' : ''}
                     `}
                     key={`${row},${col}`}
                   ></div>
@@ -191,6 +251,13 @@ function App() {
               })
           )}
       </div>
+      {gameOver && (
+        <>
+          <div className='mt-[5px]'>Game Over</div>
+
+          <div>Press space or enter to restart the game</div>
+        </>
+      )}
     </div>
   );
 }
