@@ -76,7 +76,7 @@ function App() {
     }
 
     const interval = setInterval(() => {
-      const headPos = { ...snakePos[0] };
+      let headPos = { ...snakePos[0] };
 
       switch (direction) {
         case 'l':
@@ -94,21 +94,43 @@ function App() {
         default:
           break;
       }
-      
-      if (
-        headPos.col >= ColLength ||
-        headPos.col < 0 ||
-        headPos.row >= RowLength ||
-        headPos.row < 0 ||
-        snakePos
-          .slice(1, snakePos.length)
-          .some(
-            (restPart, index) =>
-              index !== 0 && restPart.col === headPos.col && restPart.row === headPos.row
-          )
-      ) {
-        setGameOverStatus();
-        return;
+
+      if (mode === 'normal') {
+        if (
+          snakePos
+            .slice(0, snakePos.length)
+            .some(
+              (restPart, index) =>
+                index !== 0 && restPart.col === headPos.col && restPart.row === headPos.row
+            )
+        ) {
+          setGameOverStatus();
+          return;
+        } else if (headPos.col >= ColLength) {
+          headPos = { ...headPos, col: 0 };
+        } else if (headPos.col < 0) {
+          headPos = { ...headPos, col: ColLength };
+        } else if (headPos.row >= RowLength) {
+          headPos = { ...headPos, row: 0 };
+        } else if (headPos.row < 0) {
+          headPos = { ...headPos, row: RowLength };
+        }
+      } else {
+        if (
+          headPos.col >= ColLength ||
+          headPos.col < 0 ||
+          headPos.row >= RowLength ||
+          headPos.row < 0 ||
+          snakePos
+            .slice(0, snakePos.length)
+            .some(
+              (restPart, index) =>
+                index !== 0 && restPart.col === headPos.col && restPart.row === headPos.row
+            )
+        ) {
+          setGameOverStatus();
+          return;
+        }
       }
 
       if (headPos.col === targetPos.col && headPos.row === targetPos.row) {
@@ -128,7 +150,7 @@ function App() {
     return () => {
       clearInterval(interval);
     };
-  }, [snakePos, direction, snakeSpeed, gameOver, targetPos]);
+  }, [snakePos, direction, snakeSpeed, gameOver, targetPos, mode]);
 
   useEffect(() => {
     if (!gameOver) {
@@ -138,7 +160,7 @@ function App() {
     const handleStartGame = (e: KeyboardEvent) => {
       if ([' ', 'Enter'].includes(e.key)) {
         setScore(0);
-        
+
         setDirection('r');
 
         setSnakePos([
@@ -231,7 +253,7 @@ function App() {
       </div>
 
       <div className="my-[5px]">Your score: {score}</div>
-     
+
       <div className="mt-[5px] game-area">
         {Array(20)
           .fill(0)
@@ -253,7 +275,7 @@ function App() {
       </div>
       {gameOver && (
         <>
-          <div className='mt-[5px]'>Game Over</div>
+          <div className="mt-[5px]">Game Over</div>
 
           <div>Press space or enter to restart the game</div>
         </>
