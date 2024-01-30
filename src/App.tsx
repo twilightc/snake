@@ -11,7 +11,7 @@ function App() {
   const [snakePos, setSnakePos] = useState([
     { row: 0, col: 2 },
     { row: 0, col: 1 },
-    { row: 0, col: 0 },
+    { row: 0, col: 0 }
   ]);
 
   const [apple, setApplyPos] = useState({ row: 7, col: 9 });
@@ -21,15 +21,55 @@ function App() {
   const [snakeSpeed, setSnakeSpeed] = useState(150);
 
   const [gameOver, setGameOver] = useState(false);
-  
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (gameOver) {
-        return;
-      }
 
+  useEffect(() => {
+    if (gameOver) {
+      return;
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'ArrowLeft':
+          if (direction !== 'r') {
+            setDirection('l');
+          }
+          break;
+        case 'ArrowRight':
+          if (direction !== 'l') {
+            setDirection('r');
+          }
+          break;
+        case 'ArrowUp':
+          if (direction !== 'd') {
+            setDirection('u');
+          }
+          break;
+        case 'ArrowDown':
+          if (direction !== 'u') {
+            setDirection('d');
+          }
+          break;
+
+        default:
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [direction, gameOver]);
+
+  useEffect(() => {
+    if (gameOver) {
+      return;
+    }
+
+    const interval = setInterval(() => {
       const headPos = { ...snakePos[0] };
-      
+
       switch (direction) {
         case 'l':
           headPos.col -= 1;
@@ -46,7 +86,6 @@ function App() {
         default:
           break;
       }
-      
 
       if (
         headPos.col >= ColLength ||
@@ -57,9 +96,10 @@ function App() {
         setGameOver(true);
         return;
       }
-      
+
       setSnakePos([headPos, ...snakePos.slice(0, -1)]);
     }, snakeSpeed);
+
     return () => {
       clearInterval(interval);
     };
@@ -76,8 +116,17 @@ function App() {
             setSnakeSpeed(150);
           }}
         >
-          <input id="normal" type="radio" name="difficulty" checked={mode === 'normal'} readOnly />
-          <label htmlFor="normal" className="cursor-pointer">
+          <input
+            id="normal"
+            type="radio"
+            name="difficulty"
+            checked={mode === 'normal'}
+            readOnly
+            onKeyDown={(e) => {
+              e.preventDefault();
+            }}
+          />
+          <label htmlFor="normal" className="ml-[5px] cursor-pointer">
             Normal
           </label>
         </div>
@@ -87,8 +136,17 @@ function App() {
             setSnakeSpeed(100);
           }}
         >
-          <input id="medium" type="radio" name="difficulty" checked={mode === 'medium'} readOnly />
-          <label htmlFor="medium" className="cursor-pointer">
+          <input
+            id="medium"
+            type="radio"
+            name="difficulty"
+            checked={mode === 'medium'}
+            readOnly 
+            onKeyDown={(e) => {
+              e.preventDefault();
+            }}
+          />
+          <label htmlFor="medium" className="ml-[5px] cursor-pointer">
             Medium
           </label>
         </div>
@@ -98,8 +156,17 @@ function App() {
             setSnakeSpeed(50);
           }}
         >
-          <input id="hard" type="radio" name="difficulty" checked={mode === 'hard'} readOnly />
-          <label htmlFor="hard" className="cursor-pointer">
+          <input
+            id="hard"
+            type="radio"
+            name="difficulty"
+            checked={mode === 'hard'}
+            readOnly
+            onKeyDown={(e) => {
+              e.preventDefault();
+            }}
+          />
+          <label htmlFor="hard" className="ml-[5px] cursor-pointer">
             Hard
           </label>
         </div>
