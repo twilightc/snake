@@ -1,14 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import './App.css';
 
 function App() {
   const RowLength = 20;
   const ColLength = 30;
 
-  // const [gridLength, setGridlength] = useState(20);
-  const [mode, setMode] = useState<'normal' | 'medium' | 'hard'>('medium');
+  const [mode, setMode] = useState<'normal' | 'medium' | 'hard'>('hard');
 
-  const [snakeSpeed, setSnakeSpeed] = useState(100);
+  const [snakeSpeed, setSnakeSpeed] = useState(50);
 
   const [snakePos, setSnakePos] = useState([
     { row: 0, col: 2 },
@@ -17,6 +16,19 @@ function App() {
   ]);
 
   const [targetPos, setTargetPos] = useState({ row: 7, col: 9 });
+
+  const [obstaclesPos, setObstaclesPos] = useState([
+    [
+      { row: 1, col: 8 },
+      { row: 1, col: 9 },
+      { row: 1, col: 10 }
+    ],
+    [
+      { row: 4, col: 12 },
+      { row: 5, col: 12 },
+      { row: 5, col: 13 }
+    ]
+  ]);
 
   const [direction, setDirection] = useState('r');
 
@@ -29,6 +41,111 @@ function App() {
 
     setSnakePos([]);
   };
+
+  const generateObstacles = useCallback(() => {
+    const obstacleAmount = 3;
+    const obstacleLength = 3;
+
+    const isPosValid = (direction: string, axis: number) => {
+      let isValid = true;
+      switch (direction) {
+        case 'l':
+          if (axis < 0) {
+            isValid = false;
+          }
+          break;
+        case 'r':
+          if (axis > ColLength) {
+            isValid = false;
+          }
+          break;
+        case 'u':
+          if (axis < 0) {
+            isValid = false;
+          }
+          break;
+        case 'd':
+          if (axis > RowLength) {
+            isValid = false;
+          }
+          break;
+        default:
+          break;
+      }
+
+      return isValid;
+    };
+
+    const determineNewPos = (refPos: { row: number; col: number }) => {
+      const direction = Math.floor(Math.random() * 4);
+
+      let newPos = {
+        row: 0,
+        col: 0
+      };
+      
+      switch (direction) {
+        case 0:
+          newPos = {
+            ...refPos,
+            col: isPosValid('l', refPos.col - 1) ? refPos.col - 1 : refPos.col + 1
+          };
+          break;
+        case 1:
+          newPos = {
+            ...refPos,
+            col: isPosValid('r', refPos.col + 1) ? refPos.col + 1 : refPos.col - 1
+          };
+          break;
+        case 2:
+          newPos = {
+            ...refPos,
+            row: isPosValid('u', refPos.row - 1) ? refPos.row - 1 : refPos.row + 1
+          };
+          break;
+        case 3:
+          newPos = {
+            ...refPos,
+            row: isPosValid('d', refPos.row + 1) ? refPos.row + 1 : refPos.row - 1
+          };
+          break;
+
+        default:
+          break;
+      }
+
+      return newPos;
+    };
+
+    for (let index = 0; index < obstacleAmount; index++) {
+      const tempRowPos = Math.floor(Math.random() * RowLength);
+      const tempColPos = Math.floor(Math.random() * RowLength);
+      const initialPos = {
+        row: tempRowPos,
+        col:
+          tempRowPos === 0 &&
+          Array.from({ length: 10 }, (_, index) => index).some(
+            (axis) => axis === tempColPos
+          )
+            ? 10
+            : tempColPos
+      };
+      const obstacle: { row: number; col: number }[] = [];
+
+      for (let obstaclePosIndex = 0; obstaclePosIndex < obstacleLength; obstaclePosIndex++) {
+        if (obstaclePosIndex === 0) {
+          obstacle.push(initialPos);
+        } else {
+          const newPos = determineNewPos(obstacle[obstaclePosIndex - 1]);
+
+          obstacle.push(newPos);
+        }
+      }
+
+      setObstaclesPos((oldData) => [...oldData, obstacle]);
+    }
+
+  }, []);
 
   useEffect(() => {
     if (gameOver) {
@@ -95,42 +212,69 @@ function App() {
           break;
       }
 
-      if (mode === 'normal') {
-        if (
-          snakePos
-            .slice(0, snakePos.length)
-            .some(
-              (restPart, index) =>
-                index !== 0 && restPart.col === headPos.col && restPart.row === headPos.row
-            )
-        ) {
-          setGameOverStatus();
-          return;
-        } else if (headPos.col >= ColLength) {
-          headPos = { ...headPos, col: 0 };
-        } else if (headPos.col < 0) {
-          headPos = { ...headPos, col: ColLength };
-        } else if (headPos.row >= RowLength) {
-          headPos = { ...headPos, row: 0 };
-        } else if (headPos.row < 0) {
-          headPos = { ...headPos, row: RowLength };
-        }
-      } else {
-        if (
-          headPos.col >= ColLength ||
-          headPos.col < 0 ||
-          headPos.row >= RowLength ||
-          headPos.row < 0 ||
-          snakePos
-            .slice(0, snakePos.length)
-            .some(
-              (restPart, index) =>
-                index !== 0 && restPart.col === headPos.col && restPart.row === headPos.row
-            )
-        ) {
-          setGameOverStatus();
-          return;
-        }
+      switch (mode) {
+        case 'normal':
+          if (
+            snakePos
+              .slice(0, snakePos.length)
+              .some(
+                (restPart, index) =>
+                  index !== 0 && restPart.col === headPos.col && restPart.row === headPos.row
+              )
+          ) {
+            setGameOverStatus();
+            return;
+          } else if (headPos.col >= ColLength) {
+            headPos = { ...headPos, col: 0 };
+          } else if (headPos.col < 0) {
+            headPos = { ...headPos, col: ColLength };
+          } else if (headPos.row >= RowLength) {
+            headPos = { ...headPos, row: 0 };
+          } else if (headPos.row < 0) {
+            headPos = { ...headPos, row: RowLength };
+          }
+          break;
+        case 'medium':
+          if (
+            headPos.col >= ColLength ||
+            headPos.col < 0 ||
+            headPos.row >= RowLength ||
+            headPos.row < 0 ||
+            snakePos
+              .slice(0, snakePos.length)
+              .some(
+                (restPart, index) =>
+                  index !== 0 && restPart.col === headPos.col && restPart.row === headPos.row
+              )
+          ) {
+            setGameOverStatus();
+            return;
+          }
+          break;
+        case 'hard':
+          if (
+            headPos.col >= ColLength ||
+            headPos.col < 0 ||
+            headPos.row >= RowLength ||
+            headPos.row < 0 ||
+            obstaclesPos.find((pos) =>
+              pos.some(
+                (obstacles) => obstacles.col === headPos.col && obstacles.row === headPos.row
+              )
+            ) ||
+            snakePos
+              .slice(0, snakePos.length)
+              .some(
+                (restPart, index) =>
+                  index !== 0 && restPart.col === headPos.col && restPart.row === headPos.row
+              )
+          ) {
+            setGameOverStatus();
+            return;
+          }
+          break;
+        default:
+          break;
       }
 
       if (headPos.col === targetPos.col && headPos.row === targetPos.row) {
@@ -150,7 +294,7 @@ function App() {
     return () => {
       clearInterval(interval);
     };
-  }, [snakePos, direction, snakeSpeed, gameOver, targetPos, mode]);
+  }, [snakePos, direction, snakeSpeed, gameOver, targetPos, mode, obstaclesPos]);
 
   useEffect(() => {
     if (!gameOver) {
@@ -174,6 +318,9 @@ function App() {
           col: Math.floor(Math.random() * ColLength)
         });
 
+        setObstaclesPos([]);
+        generateObstacles();
+
         setGameOver(false);
       }
     };
@@ -183,7 +330,7 @@ function App() {
     return () => {
       document.removeEventListener('keydown', handleStartGame);
     };
-  }, [gameOver]);
+  }, [gameOver, generateObstacles]);
 
   return (
     <div className="App block">
@@ -232,6 +379,11 @@ function App() {
         </div>
         <div
           onClick={() => {
+            setSnakePos([
+              { row: 0, col: 2 },
+              { row: 0, col: 1 },
+              { row: 0, col: 0 }
+            ]);
             setMode('hard');
             setSnakeSpeed(50);
           }}
@@ -266,6 +418,14 @@ function App() {
                     className={`cell ${
                       snakePos.some((pos) => pos.col === col && pos.row === row) ? 'snake' : ''
                     } ${targetPos.col === col && targetPos.row === row ? 'apple' : ''}
+                      ${
+                        mode === 'hard' &&
+                        obstaclesPos.find((pos) =>
+                          pos.some((obstacle) => obstacle.col === col && obstacle.row === row)
+                        )
+                          ? 'obstacle'
+                          : ''
+                      } 
                     `}
                     key={`${row},${col}`}
                   ></div>

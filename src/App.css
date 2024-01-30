@@ -34,6 +34,10 @@
   background-color: #00c853;
 }
 
+.obstacle{
+  background-color: aqua;
+}
+
 .score {
   font-size: 24px;
   font-weight: bold;
